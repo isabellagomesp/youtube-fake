@@ -3,21 +3,26 @@ import { useState } from "react";
 function PublishVideoForm({ onPublish }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState(null);
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!title || !fileName) {
+    if (!title || !file) {
       alert("Preencha o título e selecione um arquivo.");
       return;
     }
 
-    onPublish({title, description, fileName,});
+    onPublish({
+      title,
+      description,
+      fileName: file.name,
+      file,
+    });
 
     setTitle("");
     setDescription("");
-    setFileName("");
+    setFile(null);
   };
 
   return (
@@ -46,8 +51,8 @@ function PublishVideoForm({ onPublish }) {
         type="file"
         accept="video/*"
         onChange={(event) => {
-          const file = event.target.files[0];
-          setFileName(file ? file.name : "");
+          const selectedFile = event.target.files[0];
+          setFile(selectedFile);
         }}
       />
 
