@@ -131,3 +131,20 @@ def list_user_videos(user_id: str):
         })
 
     return videos
+
+@app.get("/videos")
+def list_videos():
+    videos = []
+
+    for video in db.videos.find():
+        videos.append({
+            "id": str(video["_id"]),
+            "title": video.get("title", ""),
+            "description": video.get("description", ""),
+            "fileName": video.get("fileName", ""),
+            "ownerId": video.get("ownerId", ""),
+            "ownerName": video.get("ownerName", ""),
+            "channelName": video.get("channelName", "")
+        })
+
+    return videos

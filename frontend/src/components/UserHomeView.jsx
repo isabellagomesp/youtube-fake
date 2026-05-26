@@ -1,16 +1,14 @@
 import { useState } from "react";
-import ChannelCard from "./ChannelCard";
 import PublishVideoForm from "./PublishVideoForm";
 
 function UserHomeView({
   users,
   currentUser,
-  currentUserId,
   onLogout,
-  onSubscribe,
   onPublishVideo,
   userVideos,
   onSelectVideo,
+  onBackHome,
 }) {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
 
@@ -27,6 +25,10 @@ function UserHomeView({
 
   return (
     <div style={{ padding: 32 }}>
+        <button onClick={onBackHome}>
+            Voltar para Home
+        </button>
+
       <h1>YouTube Fake</h1>
 
       <div style={{ border: "1px solid gray", padding: 24, marginBottom: 24 }}>
@@ -97,24 +99,6 @@ function UserHomeView({
           </div>
         </div>
       )}
-
-      <h2>Canais disponíveis</h2>
-
-      {users
-        .filter((user) => user.id !== currentUserId)
-        .map((user) => {
-          const isSubscribed =
-            currentUser?.subscribedChannels?.includes(user.id);
-
-          return (
-            <ChannelCard
-              key={user.id}
-              user={user}
-              isSubscribed={isSubscribed}
-              onSubscribe={onSubscribe}
-            />
-          );
-        })}
     </div>
   );
 }
