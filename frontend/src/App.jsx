@@ -5,6 +5,7 @@ import UserHomeView from "./components/UserHomeView";
 function App() {
   const [users, setUsers] = useState([]);
   const [currentUserId, setCurrentUserId] = useState("");
+  const [userVideos, setUserVideos] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -16,8 +17,20 @@ function App() {
     setUsers(data);
   };
 
-  const handleLogin = (userId) => {
+  const fetchUserVideos = async (userId) => {
+    const response = await fetch(
+      `http://127.0.0.1:8000/users/${userId}/videos`
+    );
+  
+    const data = await response.json();
+  
+    setUserVideos(data);
+  };
+
+  const handleLogin = async (userId) => {
     setCurrentUserId(userId);
+  
+    await fetchUserVideos(userId);
   };
 
   const handleLogout = () => {
@@ -33,6 +46,19 @@ function App() {
     );
 
     await fetchUsers();
+  };
+
+  const publishVideo = async (video) => {
+    await fetch(`http://127.0.0.1:8000/users/${currentUserId}/videos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(video),
+    });
+  
+    await fetchUsers();
+    await fetchUserVideos(currentUserId);
   };
 
   const currentUser = users.find((user) => user.id === currentUserId);
@@ -53,6 +79,8 @@ function App() {
       currentUserId={currentUserId}
       onLogout={handleLogout}
       onSubscribe={subscribeToChannel}
+      onPublishVideo={publishVideo}
+      userVideos={userVideos}
     />
   );
 }

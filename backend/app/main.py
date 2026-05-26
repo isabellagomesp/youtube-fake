@@ -25,7 +25,8 @@ def create_user(user: dict):
         "name": user["name"],
         "channelName": user["channelName"],
         "subscribedChannels": [],
-        "subscribers": []
+        "subscribers": [],
+        "videos": []
     }
 
     result = db.users.insert_one(new_user)
@@ -45,7 +46,8 @@ def list_users():
             "name": user.get("name", ""),
             "channelName": user.get("channelName", ""),
             "subscribedChannels": user.get("subscribedChannels", []),
-            "subscribers": user.get("subscribers", [])
+            "subscribers": user.get("subscribers", []),
+            "videos": user.get("videos", [])
         })
 
     return users
@@ -85,3 +87,47 @@ def delete_test_users():
         "message": "Usuários de teste removidos",
         "deleted_count": result.deleted_count
     }
+
+@app.post("/users/{user_id}/videos")
+def publish_video(user_id: str, video: dict):
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        return {"message": "Usuário não encontrado"}
+
+    new_video = {
+        "title": video["title"],
+        "description": video["description"],
+        "fileName": video["fileName"],
+        "ownerId": user_id,
+        "ownerName": user.get("name", ""),
+        "channelName": user.get("channelName", "")
+    }
+
+    result = db.videos.insert_one(new_video)
+    video_id = str(result.inserted_id)
+
+    db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$push": {"videos": video_id}}
+    )
+
+    return {
+        "message": "Vídeo publicado com sucesso!",
+        "id": video_id
+    }
+
+@app.get("/users/{user_id}/videos")
+def list_user_videos(user_id: str):
+    videos = []
+
+    for video in db.videos.find({"ownerId": user_id}):
+        videos.append({
+            "id": str(video["_id"]),
+            "title": video.get("title", ""),
+            "description": video.get("description", ""),
+            "fileName": video.get("fileName", ""),
+            "ownerId": video.get("ownerId", "")
+        })
+
+    return videos
