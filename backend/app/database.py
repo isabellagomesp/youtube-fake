@@ -9,7 +9,9 @@ MONGODB_URL = os.getenv("MONGODB_URL")
 
 client = MongoClient(
     MONGODB_URL,
-    tlsCAFile=certifi.where()
+    tls=True,
+    tlsCAFile=certifi.where(),
+    serverSelectionTimeoutMS=5000
 )
 
 db = client["youtube_fake"]

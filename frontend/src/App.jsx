@@ -1,15 +1,28 @@
 import { useEffect, useState } from "react";
+import LoginView from "./components/LoginView";
+import UserHomeView from "./components/UserHomeView";
 
 function App() {
   const [users, setUsers] = useState([]);
-
-  const currentUserId = "6a13a26e0a49fd252d75b9d1";
+  const [currentUserId, setCurrentUserId] = useState("");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/users")
-      .then((response) => response.json())
-      .then((data) => setUsers(data));
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    const response = await fetch("http://127.0.0.1:8000/users");
+    const data = await response.json();
+    setUsers(data);
+  };
+
+  const handleLogin = (userId) => {
+    setCurrentUserId(userId);
+  };
+
+  const handleLogout = () => {
+    setCurrentUserId("");
+  };
 
   const subscribeToChannel = async (channelOwnerId) => {
     await fetch(
@@ -19,47 +32,28 @@ function App() {
       }
     );
 
-    const response = await fetch("http://127.0.0.1:8000/users");
-    const data = await response.json();
-
-    setUsers(data);
+    await fetchUsers();
   };
 
-  const currentUser = users.find(
-    (user) => user.id === currentUserId
-  );
+  const currentUser = users.find((user) => user.id === currentUserId);
+
+  if (!currentUserId) {
+    return (
+      <LoginView
+        users={users}
+        onLogin={handleLogin}
+      />
+    );
+  }
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>YouTube Fake</h1>
-
-      <h2>Canais disponíveis</h2>
-
-      {users
-        .filter((user) => user.id !== currentUserId)
-        .map((user) => {
-          const isSubscribed =
-            currentUser?.subscribedChannels?.includes(user.id);
-
-          return (
-            <div
-              key={user.id}
-              style={{border: "1px solid gray", padding: 16, marginBottom: 16,}}
-            >
-              <h3>{user.channelName}</h3>
-
-              <p>Dono: {user.name}</p>
-
-              <button
-                onClick={() => subscribeToChannel(user.id)}
-                disabled={isSubscribed}
-              >
-                {isSubscribed ? "Inscrito" : "Inscrever-se"}
-              </button>
-            </div>
-          );
-        })}
-    </div>
+    <UserHomeView
+      users={users}
+      currentUser={currentUser}
+      currentUserId={currentUserId}
+      onLogout={handleLogout}
+      onSubscribe={subscribeToChannel}
+    />
   );
 }
 
