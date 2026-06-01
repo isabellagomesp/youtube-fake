@@ -4,6 +4,16 @@ import UserHomeView from "./components/UserHomeView";
 import VideoPlayerView from "./components/VideoPlayerView";
 import HomeView from "./components/HomeView";
 
+import {
+  getUsers,
+  getAllVideos,
+  getUserVideos,
+  subscribeToChannel,
+  publishUserVideo,
+  likeVideo as likeVideoRequest,
+  dislikeVideo as dislikeVideoRequest,
+} from "./services/api";
+
 function App() {
   const [users, setUsers] = useState([]);
   const [currentUserId, setCurrentUserId] = useState("");
@@ -19,31 +29,24 @@ function App() {
   }, []);
 
   const fetchUsers = async () => {
-    const response = await fetch("http://127.0.0.1:8000/users");
-    const data = await response.json();
+    const data = await getUsers();
     setUsers(data);
   };
 
   const fetchUserVideos = async (userId) => {
-    const response = await fetch(
-      `http://127.0.0.1:8000/users/${userId}/videos`
-    );
-  
-    const data = await response.json();
-  
+    const data = await getUserVideos(userId);
     setUserVideos(data);
   };
 
   const fetchAllVideos = async () => {
-    const response = await fetch("http://127.0.0.1:8000/videos");
-    const data = await response.json();
+    const data = await getAllVideos();
     setAllVideos(data);
   };
 
   const handleLogin = async (userId) => {
     setCurrentUserId(userId);
     setCurrentPage("home");
-  
+
     await fetchUserVideos(userId);
     await fetchAllVideos();
   };
@@ -52,89 +55,67 @@ function App() {
     setCurrentUserId("");
   };
 
-  const subscribeToChannel = async (channelOwnerId) => {
-    await fetch(
-      `http://127.0.0.1:8000/users/${currentUserId}/subscribe/${channelOwnerId}`,
-      {
-        method: "POST",
-      }
-    );
-
+  const handleSubscribeToChannel = async (channelOwnerId) => {
+    await subscribeToChannel(currentUserId, channelOwnerId);
     await fetchUsers();
   };
 
   const publishVideo = async (video) => {
-    const response = await fetch(`http://127.0.0.1:8000/users/${currentUserId}/videos`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: video.title,
-        description: video.description,
-        fileName: video.fileName,
-      }),
-    });
-  
-    const data = await response.json();
-  
+    const data = await publishUserVideo(currentUserId, video);
+
     const localUrl = URL.createObjectURL(video.file);
-  
+
     setLocalVideoUrls((previous) => ({
       ...previous,
       [data.id]: localUrl,
     }));
-  
+
     await fetchUsers();
     await fetchUserVideos(currentUserId);
     await fetchAllVideos();
   };
 
   const likeVideo = async (videoId) => {
-    await fetch(`http://127.0.0.1:8000/videos/${videoId}/like/${currentUserId}`, {
-      method: "POST",
-    });
-  
+    await likeVideoRequest(videoId, currentUserId);
+
     await fetchAllVideos();
     await fetchUserVideos(currentUserId);
-  
-    const response = await fetch("http://127.0.0.1:8000/videos");
-    const data = await response.json();
-  
-    const updatedVideo = data.find((video) => video.id === videoId);
-  
+
+    const updatedVideos = await getAllVideos();
+    const updatedVideo = updatedVideos.find((video) => video.id === videoId);
+
     if (updatedVideo) {
       setSelectedVideo({
         ...updatedVideo,
         localUrl: localVideoUrls[videoId],
       });
     }
+
+    setAllVideos(updatedVideos);
   };
-  
+
   const dislikeVideo = async (videoId) => {
-    await fetch(`http://127.0.0.1:8000/videos/${videoId}/dislike/${currentUserId}`, {
-      method: "POST",
-    });
-  
+    await dislikeVideoRequest(videoId, currentUserId);
+
     await fetchAllVideos();
     await fetchUserVideos(currentUserId);
-  
-    const response = await fetch("http://127.0.0.1:8000/videos");
-    const data = await response.json();
-  
-    const updatedVideo = data.find((video) => video.id === videoId);
-  
+
+    const updatedVideos = await getAllVideos();
+    const updatedVideo = updatedVideos.find((video) => video.id === videoId);
+
     if (updatedVideo) {
       setSelectedVideo({
         ...updatedVideo,
         localUrl: localVideoUrls[videoId],
       });
     }
+
+    setAllVideos(updatedVideos);
   };
 
   const filteredVideos = allVideos.filter((video) => {
     const search = searchText.toLowerCase();
-  
+
     return (
       video.title.toLowerCase().includes(search) ||
       video.description.toLowerCase().includes(search) ||
@@ -145,12 +126,7 @@ function App() {
   const currentUser = users.find((user) => user.id === currentUserId);
 
   if (!currentUserId) {
-    return (
-      <LoginView
-        users={users}
-        onLogin={handleLogin}
-      />
-    );
+    return <LoginView users={users} onLogin={handleLogin} />;
   }
 
   if (selectedVideo) {
@@ -160,7 +136,7 @@ function App() {
         currentUser={currentUser}
         currentUserId={currentUserId}
         onBack={() => setSelectedVideo(null)}
-        onSubscribe={subscribeToChannel}
+        onSubscribe={handleSubscribeToChannel}
         onLikeVideo={likeVideo}
         onDislikeVideo={dislikeVideo}
       />
@@ -182,8 +158,6 @@ function App() {
             localUrl: localVideoUrls[video.id],
           });
         }}
-        onLikeVideo={likeVideo}
-        onDislikeVideo={dislikeVideo}
       />
     );
   }

@@ -7,9 +7,7 @@ function HomeView({
     searchText,
     onSearchChange,
     onOpenProfile,
-    onSelectVideo,
-    onLikeVideo,
-    onDislikeVideo,
+    onSelectVideo
 }) {
     return (
       <div style={{ padding: 32 }}>
@@ -63,29 +61,17 @@ function HomeView({
                   marginTop: 12,
                 }}
               >
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onLikeVideo(video.id);
-                  }}
+                <div
+                    style={{
+                        display: "flex",
+                        gap: 12,
+                        marginTop: 12,
+                        color: "gray",
+                    }}
                 >
-                  {video.likedBy?.includes(currentUserId)
-                    ? "👍"
-                    : "👍🏻"}{" "}
-                  {video.likesCount || 0}
-                </button>
-  
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onDislikeVideo(video.id);
-                  }}
-                >
-                  {video.dislikedBy?.includes(currentUserId)
-                    ? "👎"
-                    : "👎🏻"}{" "}
-                  {video.dislikesCount || 0}
-                </button>
+                    <span>👍 {video.likesCount || 0}</span>
+                    <span>👎 {video.dislikesCount || 0}</span>
+                </div>
               </div>
             </div>
           ))}
