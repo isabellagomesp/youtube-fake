@@ -101,7 +101,9 @@ def publish_video(user_id: str, video: dict):
         "fileName": video["fileName"],
         "ownerId": user_id,
         "ownerName": user.get("name", ""),
-        "channelName": user.get("channelName", "")
+        "channelName": user.get("channelName", ""),
+        "likedBy": [],
+        "dislikedBy": []
     }
 
     result = db.videos.insert_one(new_video)
@@ -127,7 +129,13 @@ def list_user_videos(user_id: str):
             "title": video.get("title", ""),
             "description": video.get("description", ""),
             "fileName": video.get("fileName", ""),
-            "ownerId": video.get("ownerId", "")
+            "ownerId": video.get("ownerId", ""),
+            "ownerName": video.get("ownerName", ""),
+            "channelName": video.get("channelName", ""),
+            "likedBy": video.get("likedBy", []),
+            "dislikedBy": video.get("dislikedBy", []),
+            "likesCount": len(video.get("likedBy", [])),
+            "dislikesCount": len(video.get("dislikedBy", []))
         })
 
     return videos
@@ -144,7 +152,73 @@ def list_videos():
             "fileName": video.get("fileName", ""),
             "ownerId": video.get("ownerId", ""),
             "ownerName": video.get("ownerName", ""),
-            "channelName": video.get("channelName", "")
+            "channelName": video.get("channelName", ""),
+            "likedBy": video.get("likedBy", []),
+            "dislikedBy": video.get("dislikedBy", []),
+            "likesCount": len(video.get("likedBy", [])),
+            "dislikesCount": len(video.get("dislikedBy", []))
         })
 
     return videos
+
+@app.post("/videos/{video_id}/like/{user_id}")
+def like_video(video_id: str, user_id: str):
+    video = db.videos.find_one({"_id": ObjectId(video_id)})
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not video:
+        return {"message": "Vídeo não encontrado"}
+
+    if not user:
+        return {"message": "Usuário não encontrado"}
+
+    already_liked = user_id in video.get("likedBy", [])
+
+    if already_liked:
+        db.videos.update_one(
+            {"_id": ObjectId(video_id)},
+            {"$pull": {"likedBy": user_id}}
+        )
+
+        return {"message": "Like removido"}
+    
+    db.videos.update_one(
+        {"_id": ObjectId(video_id)},
+        {
+            "$addToSet": {"likedBy": user_id},
+            "$pull": {"dislikedBy": user_id}
+        }
+    )
+
+    return {"message": "Vídeo curtido"}
+
+@app.post("/videos/{video_id}/dislike/{user_id}")
+def dislike_video(video_id: str, user_id: str):
+    video = db.videos.find_one({"_id": ObjectId(video_id)})
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not video:
+        return {"message": "Vídeo não encontrado"}
+
+    if not user:
+        return {"message": "Usuário não encontrado"}
+
+    already_disliked = user_id in video.get("dislikedBy", [])
+
+    if already_disliked:
+        db.videos.update_one(
+            {"_id": ObjectId(video_id)},
+            {"$pull": {"dislikedBy": user_id}}
+        )
+
+        return {"message": "Dislike removido"}
+    
+    db.videos.update_one(
+        {"_id": ObjectId(video_id)},
+        {
+            "$addToSet": {"dislikedBy": user_id},
+            "$pull": {"likedBy": user_id}
+        }
+    )
+
+    return {"message": "Vídeo descurtido"}

@@ -1,4 +1,12 @@
-function VideoPlayerView({ video, currentUser, onBack, onSubscribe }) {
+function VideoPlayerView({
+    video,
+    currentUser,
+    currentUserId,
+    onBack,
+    onSubscribe,
+    onLikeVideo,
+    onDislikeVideo,
+  }) {
     const isOwnVideo = video.ownerId === currentUser?.id;
   
     const isSubscribed =
@@ -48,6 +56,16 @@ function VideoPlayerView({ video, currentUser, onBack, onSubscribe }) {
             >
             {video.description}
             </p>
+
+            <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+                <button onClick={() => onLikeVideo(video.id)}>
+                    {video.likedBy?.includes(currentUserId) ? "👍" : "👍🏻"} {video.likesCount || 0}
+                </button>
+
+                <button onClick={() => onDislikeVideo(video.id)}>
+                    {video.dislikedBy?.includes(currentUserId) ? "👎" : "👎🏻"} {video.dislikesCount || 0}
+                </button>
+            </div>
   
           <div
             style={{

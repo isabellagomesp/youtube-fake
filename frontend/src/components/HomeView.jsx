@@ -1,4 +1,12 @@
-function HomeView({ currentUser, videos, onOpenProfile, onSelectVideo }) {
+function HomeView({
+    currentUser,
+    currentUserId,
+    videos,
+    onOpenProfile,
+    onSelectVideo,
+    onLikeVideo,
+    onDislikeVideo,
+  }) {
     return (
       <div style={{ padding: 32 }}>
         <header
@@ -30,11 +38,46 @@ function HomeView({ currentUser, videos, onOpenProfile, onSelectVideo }) {
               }}
             >
               <h3>{video.title}</h3>
+  
               <p>{video.description}</p>
+  
               <p>
                 <strong>{video.channelName}</strong>
               </p>
+  
               <small>{video.fileName}</small>
+  
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  marginTop: 12,
+                }}
+              >
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onLikeVideo(video.id);
+                  }}
+                >
+                  {video.likedBy?.includes(currentUserId)
+                    ? "👍"
+                    : "👍🏻"}{" "}
+                  {video.likesCount || 0}
+                </button>
+  
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDislikeVideo(video.id);
+                  }}
+                >
+                  {video.dislikedBy?.includes(currentUserId)
+                    ? "👎"
+                    : "👎🏻"}{" "}
+                  {video.dislikesCount || 0}
+                </button>
+              </div>
             </div>
           ))}
         </div>

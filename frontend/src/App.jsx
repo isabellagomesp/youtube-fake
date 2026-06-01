@@ -89,6 +89,24 @@ function App() {
     await fetchAllVideos();
   };
 
+  const likeVideo = async (videoId) => {
+    await fetch(`http://127.0.0.1:8000/videos/${videoId}/like/${currentUserId}`, {
+      method: "POST",
+    });
+  
+    await fetchAllVideos();
+    await fetchUserVideos(currentUserId);
+  };
+  
+  const dislikeVideo = async (videoId) => {
+    await fetch(`http://127.0.0.1:8000/videos/${videoId}/dislike/${currentUserId}`, {
+      method: "POST",
+    });
+  
+    await fetchAllVideos();
+    await fetchUserVideos(currentUserId);
+  };
+
   const currentUser = users.find((user) => user.id === currentUserId);
 
   if (!currentUserId) {
@@ -105,8 +123,11 @@ function App() {
       <VideoPlayerView
         video={selectedVideo}
         currentUser={currentUser}
+        currentUserId={currentUserId}
         onBack={() => setSelectedVideo(null)}
         onSubscribe={subscribeToChannel}
+        onLikeVideo={likeVideo}
+        onDislikeVideo={dislikeVideo}
       />
     );
   }
@@ -115,6 +136,7 @@ function App() {
     return (
       <HomeView
         currentUser={currentUser}
+        currentUserId={currentUserId}
         videos={allVideos}
         onOpenProfile={() => setCurrentPage("profile")}
         onSelectVideo={(video) => {
@@ -123,6 +145,8 @@ function App() {
             localUrl: localVideoUrls[video.id],
           });
         }}
+        onLikeVideo={likeVideo}
+        onDislikeVideo={dislikeVideo}
       />
     );
   }
