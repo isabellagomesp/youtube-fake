@@ -28,9 +28,10 @@ export async function publishUserVideo(userId, video) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      title: video.title,
-      description: video.description,
-      fileName: video.fileName,
+        title: video.title,
+        description: video.description,
+        fileName: video.fileName,
+        thumbnailFileName: video.thumbnailFileName,
     }),
   });
 
@@ -48,3 +49,8 @@ export async function dislikeVideo(videoId, userId) {
     method: "POST",
   });
 }
+
+export async function getUserLikedVideos(userId) {
+    const response = await fetch(`${API_URL}/users/${userId}/liked-videos`);
+    return response.json();
+  }

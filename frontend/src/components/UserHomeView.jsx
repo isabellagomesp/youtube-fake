@@ -7,10 +7,12 @@ function UserHomeView({
   onLogout,
   onPublishVideo,
   userVideos,
+  likedVideos,
   onSelectVideo,
   onBackHome,
 }) {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("posts");
 
   const subscribersCount = currentUser?.subscribers?.length || 0;
 
@@ -23,79 +25,318 @@ function UserHomeView({
     setIsPublishModalOpen(false);
   };
 
+  const videosToShow = selectedTab === "posts" ? userVideos : likedVideos;
+
   return (
-    <div style={{ padding: 32 }}>
-        <button onClick={onBackHome}>
-            Voltar para Home
-        </button>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f5f7fb",
+        padding: "24px 32px",
+        boxSizing: "border-box",
+      }}
+    >
+      <header
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={onBackHome}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              fontSize: 24,
+            }}
+          >
+            ←
+          </button>
 
-      <h1>YouTube Fake</h1>
+          <h1
+            style={{
+              color: "#ff0000",
+              margin: 0,
+              fontSize: 32,
+              fontWeight: "bold",
+            }}
+          >
+            YouTube Fake
+          </h1>
+        </div>
 
-      <div style={{ border: "1px solid gray", padding: 24, marginBottom: 24 }}>
-        <div
-          style={{display: "flex", justifyContent: "space-between",alignItems: "flex-start", gap: 16, }}
+        <button
+          onClick={() => setIsPublishModalOpen(true)}
+          style={{
+            border: "none",
+            background: "white",
+            padding: "12px 20px",
+            borderRadius: 24,
+            cursor: "pointer",
+            fontWeight: "bold",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+          }}
         >
-          <div style={{ textAlign: "left" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <h2 style={{ margin: 0 }}>{currentUser?.channelName}</h2>
+          + Criar
+        </button>
+      </header>
 
-              <button onClick={onLogout}>
-                Trocar usuário
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "220px 1fr",
+          gap: 32,
+        }}
+      >
+        <aside
+          style={{
+            background: "white",
+            borderRadius: 18,
+            padding: 20,
+            height: "fit-content",
+            textAlign: "left",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>Inscrições</h3>
+
+          {subscribedChannels.length === 0 ? (
+            <p style={{ color: "#666" }}>Nenhum canal inscrito.</p>
+          ) : (
+            <div>
+              {subscribedChannels.map((channel, index) => (
+                <div key={channel.id}>
+                  <p style={{ margin: "12px 0" }}>
+                    {channel.channelName}
+                  </p>
+
+                  {index !== subscribedChannels.length - 1 && (
+                    <div
+                      style={{
+                        height: 1,
+                        background: "#e0e0e0",
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </aside>
+
+        <main>
+          <section
+            style={{
+              background: "white",
+              borderRadius: 24,
+              padding: 32,
+              textAlign: "left",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+              marginBottom: 24,
+            }}
+          >
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 16,
+                }}
+                >
+                <h2
+                    style={{
+                    margin: 0,
+                    fontSize: 32,
+                    color: "#111",
+                    }}
+                >
+                    {currentUser?.channelName}
+                </h2>
+
+                <button
+                    onClick={onLogout}
+                    style={{
+                    border: "none",
+                    background: "#f5f7fb",
+                    padding: "10px 18px",
+                    borderRadius: 20,
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    }}
+                >
+                    Trocar usuário
+                </button>
+            </div>
+
+            <p
+              style={{
+                marginTop: 8,
+                color: "#666",
+                wordBreak: "break-all",
+              }}
+            >
+              ID: {currentUser?.id} · {subscribersCount} inscritos
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 24,
+                marginTop: 28,
+                borderBottom: "1px solid #e0e0e0",
+              }}
+            >
+              <button
+                onClick={() => setSelectedTab("posts")}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: "0 0 12px",
+                  cursor: "pointer",
+                  fontWeight: selectedTab === "posts" ? "bold" : "normal",
+                  borderBottom:
+                    selectedTab === "posts"
+                      ? "3px solid #111"
+                      : "3px solid transparent",
+                }}
+              >
+                Posts
+              </button>
+
+              <button
+                onClick={() => setSelectedTab("playlists")}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: "0 0 12px",
+                  cursor: "pointer",
+                  fontWeight: selectedTab === "playlists" ? "bold" : "normal",
+                  borderBottom:
+                    selectedTab === "playlists"
+                      ? "3px solid #111"
+                      : "3px solid transparent",
+                }}
+              >
+                Playlists
+              </button>
+
+              <button
+                onClick={() => setSelectedTab("liked")}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: "0 0 12px",
+                  cursor: "pointer",
+                  fontWeight: selectedTab === "liked" ? "bold" : "normal",
+                  borderBottom:
+                    selectedTab === "liked"
+                      ? "3px solid #111"
+                      : "3px solid transparent",
+                }}
+              >
+                Curtidos
               </button>
             </div>
 
-            <p>
-              <strong>{subscribersCount}</strong> inscritos
-            </p>
+            {selectedTab === "playlists" ? (
+              <p style={{ marginTop: 24, color: "#666" }}>
+                Nenhuma playlist criada ainda.
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 18,
+                  marginTop: 24,
+                }}
+              >
+                {videosToShow.map((video) => (
+                  <div
+                    key={video.id}
+                    onClick={() => onSelectVideo(video)}
+                    style={{
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      background: "#f5f7fb",
+                      cursor: "pointer",
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        aspectRatio: "16 / 9",
+                        background: "black",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 13,
+                      }}
+                    >
+                      Thumbnail não disponível
+                    </div>
 
-            <div>
-              <strong>Canais inscritos:</strong>
+                    <div style={{ padding: 12 }}>
+                      <strong>{video.title}</strong>
 
-              {subscribedChannels.length === 0 ? (
-                <p>Nenhum canal inscrito.</p>
-              ) : (
-                <ul style={{ paddingLeft: 20 }}>
-                  {subscribedChannels.map((channel) => (
-                    <li key={channel.id}>{channel.channelName}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+                      <p
+                        style={{
+                          marginTop: 6,
+                          color: "#666",
+                          fontSize: 13,
+                        }}
+                      >
+                        {video.channelName}
+                      </p>
 
-          <button onClick={() => setIsPublishModalOpen(true)}>
-            Publicar vídeo
-          </button>
-        </div>
-
-        <h3 style={{ marginTop: 24 }}>Vídeos publicados</h3>
-
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {userVideos.map((video) => (
-            <div
-              key={video.id}
-              onClick={() => onSelectVideo(video)}
-              style={{border: "1px solid gray", padding: 12, minWidth: 160, cursor: "pointer", }}
-            >
-              <strong>{video.title}</strong>
-              <p>{video.fileName}</p>
-            </div>
-          ))}
-        </div>
+                      <p
+                        style={{
+                          marginTop: 6,
+                          color: "#666",
+                          fontSize: 13,
+                        }}
+                      >
+                        👍 {video.likesCount || 0} · 👎{" "}
+                        {video.dislikesCount || 0}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
       </div>
 
       {isPublishModalOpen && (
         <div
-          style={{position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", display: "flex", alignItems: "center", justifyContent: "center",}}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <div
-            style={{background: "white", padding: 24, borderRadius: 8, minWidth: 420, }}
+            style={{
+              background: "white",
+              padding: 24,
+              borderRadius: 16,
+              minWidth: 420,
+            }}
           >
-            <button onClick={() => setIsPublishModalOpen(false)}>
-              Fechar
-            </button>
-
-            <PublishVideoForm onPublish={handlePublishVideo} />
+            <PublishVideoForm
+                onPublish={handlePublishVideo}
+                onClose={() => setIsPublishModalOpen(false)}
+            />
           </div>
         </div>
       )}

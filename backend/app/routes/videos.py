@@ -15,6 +15,7 @@ def publish_video(user_id: str, video: dict):
         "title": video["title"],
         "description": video["description"],
         "fileName": video["fileName"],
+        "thumbnailFileName": video.get("thumbnailFileName", ""),
         "ownerId": user_id,
         "ownerName": user.get("name", ""),
         "channelName": user.get("channelName", ""),
@@ -45,6 +46,7 @@ def list_user_videos(user_id: str):
             "title": video.get("title", ""),
             "description": video.get("description", ""),
             "fileName": video.get("fileName", ""),
+            "thumbnailFileName": video.get("thumbnailFileName", ""),
             "ownerId": video.get("ownerId", ""),
             "ownerName": video.get("ownerName", ""),
             "channelName": video.get("channelName", ""),
@@ -66,6 +68,7 @@ def list_videos():
             "title": video.get("title", ""),
             "description": video.get("description", ""),
             "fileName": video.get("fileName", ""),
+            "thumbnailFileName": video.get("thumbnailFileName", ""),
             "ownerId": video.get("ownerId", ""),
             "ownerName": video.get("ownerName", ""),
             "channelName": video.get("channelName", ""),
@@ -96,6 +99,11 @@ def like_video(video_id: str, user_id: str):
             {"$pull": {"likedBy": user_id}}
         )
 
+        db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$pull": {"likedVideos": video_id}}
+        )
+
         return {"message": "Like removido"}
 
     db.videos.update_one(
@@ -104,6 +112,11 @@ def like_video(video_id: str, user_id: str):
             "$addToSet": {"likedBy": user_id},
             "$pull": {"dislikedBy": user_id}
         }
+    )
+
+    db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$addToSet": {"likedVideos": video_id}}
     )
 
     return {"message": "Vídeo curtido"}
@@ -137,4 +150,41 @@ def dislike_video(video_id: str, user_id: str):
         }
     )
 
+    db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$pull": {"likedVideos": video_id}}
+    )
+
     return {"message": "Vídeo descurtido"}
+
+@router.get("/users/{user_id}/liked-videos")
+def list_user_liked_videos(user_id: str):
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        return {"message": "Usuário não encontrado"}
+
+    liked_video_ids = user.get("likedVideos", [])
+
+    videos = []
+
+    for video_id in liked_video_ids:
+        video = db.videos.find_one({"_id": ObjectId(video_id)})
+
+        if video:
+            videos.append({
+                "id": str(video["_id"]),
+                "title": video.get("title", ""),
+                "description": video.get("description", ""),
+                "fileName": video.get("fileName", ""),
+                "thumbnailFileName": video.get("thumbnailFileName", ""),
+                "ownerId": video.get("ownerId", ""),
+                "ownerName": video.get("ownerName", ""),
+                "channelName": video.get("channelName", ""),
+                "likedBy": video.get("likedBy", []),
+                "dislikedBy": video.get("dislikedBy", []),
+                "likesCount": len(video.get("likedBy", [])),
+                "dislikesCount": len(video.get("dislikedBy", []))
+            })
+
+    return videos

@@ -8,6 +8,7 @@ import {
   getUsers,
   getAllVideos,
   getUserVideos,
+  getUserLikedVideos,
   subscribeToChannel,
   publishUserVideo,
   likeVideo as likeVideoRequest,
@@ -20,9 +21,11 @@ function App() {
   const [userVideos, setUserVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [localVideoUrls, setLocalVideoUrls] = useState({});
+  const [localThumbnailUrls, setLocalThumbnailUrls] = useState({});
   const [currentPage, setCurrentPage] = useState("home");
   const [allVideos, setAllVideos] = useState([]);
   const [searchText, setSearchText] = useState("");
+  const [likedVideos, setLikedVideos] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -43,16 +46,24 @@ function App() {
     setAllVideos(data);
   };
 
+  const fetchLikedVideos = async (userId) => {
+    const data = await getUserLikedVideos(userId);
+    setLikedVideos(data);
+  };
+
   const handleLogin = async (userId) => {
     setCurrentUserId(userId);
     setCurrentPage("home");
-
+  
     await fetchUserVideos(userId);
+    await fetchLikedVideos(userId);
     await fetchAllVideos();
   };
 
   const handleLogout = () => {
     setCurrentUserId("");
+    setSelectedVideo(null);
+    setCurrentPage("home");
   };
 
   const handleSubscribeToChannel = async (channelOwnerId) => {
@@ -64,10 +75,16 @@ function App() {
     const data = await publishUserVideo(currentUserId, video);
 
     const localUrl = URL.createObjectURL(video.file);
+    const localThumbnailUrl = URL.createObjectURL(video.thumbnailFile);
 
     setLocalVideoUrls((previous) => ({
       ...previous,
       [data.id]: localUrl,
+    }));
+
+    setLocalThumbnailUrls((previous) => ({
+      ...previous,
+      [data.id]: localThumbnailUrl,
     }));
 
     await fetchUsers();
@@ -77,49 +94,53 @@ function App() {
 
   const likeVideo = async (videoId) => {
     await likeVideoRequest(videoId, currentUserId);
-
-    await fetchAllVideos();
+    await fetchLikedVideos(currentUserId);
     await fetchUserVideos(currentUserId);
 
     const updatedVideos = await getAllVideos();
     const updatedVideo = updatedVideos.find((video) => video.id === videoId);
 
+    setAllVideos(updatedVideos);
+
     if (updatedVideo) {
       setSelectedVideo({
         ...updatedVideo,
         localUrl: localVideoUrls[videoId],
+        localThumbnailUrl: localThumbnailUrls[videoId],
       });
     }
-
-    setAllVideos(updatedVideos);
   };
 
   const dislikeVideo = async (videoId) => {
     await dislikeVideoRequest(videoId, currentUserId);
-
-    await fetchAllVideos();
+    await fetchLikedVideos(currentUserId);
     await fetchUserVideos(currentUserId);
 
     const updatedVideos = await getAllVideos();
     const updatedVideo = updatedVideos.find((video) => video.id === videoId);
 
+    setAllVideos(updatedVideos);
+
     if (updatedVideo) {
       setSelectedVideo({
         ...updatedVideo,
         localUrl: localVideoUrls[videoId],
+        localThumbnailUrl: localThumbnailUrls[videoId],
       });
     }
-
-    setAllVideos(updatedVideos);
   };
 
   const filteredVideos = allVideos.filter((video) => {
-    const search = searchText.toLowerCase();
-
+    const search = searchText.trim().toLowerCase();
+  
+    if (!search) {
+      return true;
+    }
+  
     return (
-      video.title.toLowerCase().includes(search) ||
-      video.description.toLowerCase().includes(search) ||
-      video.channelName.toLowerCase().includes(search)
+      video.title?.toLowerCase().includes(search) ||
+      video.description?.toLowerCase().includes(search) ||
+      video.channelName?.toLowerCase().includes(search)
     );
   });
 
@@ -156,8 +177,10 @@ function App() {
           setSelectedVideo({
             ...video,
             localUrl: localVideoUrls[video.id],
+            localThumbnailUrl: localThumbnailUrls[video.id],
           });
         }}
+        localThumbnailUrls={localThumbnailUrls}
       />
     );
   }
@@ -169,10 +192,12 @@ function App() {
       onLogout={handleLogout}
       onPublishVideo={publishVideo}
       userVideos={userVideos}
+      likedVideos={likedVideos}
       onSelectVideo={(video) => {
         setSelectedVideo({
           ...video,
           localUrl: localVideoUrls[video.id],
+          localThumbnailUrl: localThumbnailUrls[video.id],
         });
       }}
       onBackHome={() => setCurrentPage("home")}

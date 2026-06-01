@@ -11,7 +11,8 @@ def create_user(user: dict):
         "channelName": user["channelName"],
         "subscribedChannels": [],
         "subscribers": [],
-        "videos": []
+        "videos": [],
+        "likedVideos": []
     }
 
     result = db.users.insert_one(new_user)
@@ -32,7 +33,8 @@ def list_users():
             "channelName": user.get("channelName", ""),
             "subscribedChannels": user.get("subscribedChannels", []),
             "subscribers": user.get("subscribers", []),
-            "videos": user.get("videos", [])
+            "videos": user.get("videos", []),
+            "likedVideos": user.get("likedVideos", [])
         })
 
     return users
@@ -47,6 +49,23 @@ def subscribe_to_channel(user_id: str, channel_owner_id: str):
 
     if not channel_owner:
         return {"message": "Canal não encontrado"}
+
+    already_subscribed = channel_owner_id in user.get("subscribedChannels", [])
+
+    if already_subscribed:
+        db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$pull": {"subscribedChannels": channel_owner_id}}
+        )
+
+        db.users.update_one(
+            {"_id": ObjectId(channel_owner_id)},
+            {"$pull": {"subscribers": user_id}}
+        )
+
+        return {
+            "message": f"{user['name']} se desinscreveu do {channel_owner['channelName']}."
+        }
 
     db.users.update_one(
         {"_id": ObjectId(user_id)},
