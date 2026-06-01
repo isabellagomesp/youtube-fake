@@ -12,6 +12,7 @@ function App() {
   const [localVideoUrls, setLocalVideoUrls] = useState({});
   const [currentPage, setCurrentPage] = useState("home");
   const [allVideos, setAllVideos] = useState([]);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -96,6 +97,18 @@ function App() {
   
     await fetchAllVideos();
     await fetchUserVideos(currentUserId);
+  
+    const response = await fetch("http://127.0.0.1:8000/videos");
+    const data = await response.json();
+  
+    const updatedVideo = data.find((video) => video.id === videoId);
+  
+    if (updatedVideo) {
+      setSelectedVideo({
+        ...updatedVideo,
+        localUrl: localVideoUrls[videoId],
+      });
+    }
   };
   
   const dislikeVideo = async (videoId) => {
@@ -105,7 +118,29 @@ function App() {
   
     await fetchAllVideos();
     await fetchUserVideos(currentUserId);
+  
+    const response = await fetch("http://127.0.0.1:8000/videos");
+    const data = await response.json();
+  
+    const updatedVideo = data.find((video) => video.id === videoId);
+  
+    if (updatedVideo) {
+      setSelectedVideo({
+        ...updatedVideo,
+        localUrl: localVideoUrls[videoId],
+      });
+    }
   };
+
+  const filteredVideos = allVideos.filter((video) => {
+    const search = searchText.toLowerCase();
+  
+    return (
+      video.title.toLowerCase().includes(search) ||
+      video.description.toLowerCase().includes(search) ||
+      video.channelName.toLowerCase().includes(search)
+    );
+  });
 
   const currentUser = users.find((user) => user.id === currentUserId);
 
@@ -137,7 +172,9 @@ function App() {
       <HomeView
         currentUser={currentUser}
         currentUserId={currentUserId}
-        videos={allVideos}
+        videos={filteredVideos}
+        searchText={searchText}
+        onSearchChange={setSearchText}
         onOpenProfile={() => setCurrentPage("profile")}
         onSelectVideo={(video) => {
           setSelectedVideo({

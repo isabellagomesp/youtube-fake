@@ -13,37 +13,37 @@ function VideoPlayerView({
       currentUser?.subscribedChannels?.includes(video.ownerId);
   
     return (
-      <div style={{ padding: 32 }}>
+        <div style={{ padding: 32 }}>
         <button onClick={onBack}>Voltar</button>
   
         <div style={{ marginTop: 24 }}>
-          {video.localUrl ? (
-            <video
-              src={video.localUrl}
-              controls
-              width="800"
-              style={{
-                display: "block",
-                background: "black",
-                marginBottom: 16,
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 800,
-                height: 450,
-                background: "black",
-                color: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              Arquivo de vídeo não disponível nesta sessão
-            </div>
-          )}
+          <div
+            style={{
+              width: 800,
+              aspectRatio: "16 / 9",
+              background: "black",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+            }}
+          >
+            {video.localUrl ? (
+              <video
+                src={video.localUrl}
+                controls
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                }}
+              />
+            ) : (
+              <p style={{ color: "white" }}>
+                Arquivo de vídeo não disponível nesta sessão
+              </p>
+            )}
+          </div>
   
             <h2
             style={{marginBottom: 12,textAlign: "left",}}

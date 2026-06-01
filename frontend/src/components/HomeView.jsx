@@ -1,12 +1,16 @@
+import SearchBar from "./SearchBar";
+
 function HomeView({
     currentUser,
     currentUserId,
     videos,
+    searchText,
+    onSearchChange,
     onOpenProfile,
     onSelectVideo,
     onLikeVideo,
     onDislikeVideo,
-  }) {
+}) {
     return (
       <div style={{ padding: 32 }}>
         <header
@@ -18,7 +22,12 @@ function HomeView({
           }}
         >
           <h1>YouTube Fake</h1>
-  
+
+         <SearchBar
+            searchText={searchText}
+            onSearchChange={onSearchChange}
+        />
+
           <button onClick={onOpenProfile}>
             {currentUser?.channelName}
           </button>
