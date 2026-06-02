@@ -50,6 +50,19 @@ export async function dislikeVideo(videoId, userId) {
   });
 }
 
+export async function createVideoComment(videoId, userId, text) {
+  await fetch(`${API_URL}/videos/${videoId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId,
+      text,
+    }),
+  });
+}
+
 export async function getUserLikedVideos(userId) {
     const response = await fetch(`${API_URL}/users/${userId}/liked-videos`);
     return response.json();

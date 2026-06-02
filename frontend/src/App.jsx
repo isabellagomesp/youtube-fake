@@ -13,6 +13,7 @@ import {
   publishUserVideo,
   likeVideo as likeVideoRequest,
   dislikeVideo as dislikeVideoRequest,
+  createVideoComment as createVideoCommentRequest,
 } from "./services/api";
 
 function App() {
@@ -74,18 +75,23 @@ function App() {
   const publishVideo = async (video) => {
     const data = await publishUserVideo(currentUserId, video);
 
-    const localUrl = URL.createObjectURL(video.file);
-    const localThumbnailUrl = URL.createObjectURL(video.thumbnailFile);
+    if (video.file) {
+      const localUrl = URL.createObjectURL(video.file);
 
-    setLocalVideoUrls((previous) => ({
-      ...previous,
-      [data.id]: localUrl,
-    }));
+      setLocalVideoUrls((previous) => ({
+        ...previous,
+        [data.id]: localUrl,
+      }));
+    }
 
-    setLocalThumbnailUrls((previous) => ({
-      ...previous,
-      [data.id]: localThumbnailUrl,
-    }));
+    if (video.thumbnailFile) {
+      const localThumbnailUrl = URL.createObjectURL(video.thumbnailFile);
+
+      setLocalThumbnailUrls((previous) => ({
+        ...previous,
+        [data.id]: localThumbnailUrl,
+      }));
+    }
 
     await fetchUsers();
     await fetchUserVideos(currentUserId);
@@ -115,6 +121,23 @@ function App() {
     await dislikeVideoRequest(videoId, currentUserId);
     await fetchLikedVideos(currentUserId);
     await fetchUserVideos(currentUserId);
+
+    const updatedVideos = await getAllVideos();
+    const updatedVideo = updatedVideos.find((video) => video.id === videoId);
+
+    setAllVideos(updatedVideos);
+
+    if (updatedVideo) {
+      setSelectedVideo({
+        ...updatedVideo,
+        localUrl: localVideoUrls[videoId],
+        localThumbnailUrl: localThumbnailUrls[videoId],
+      });
+    }
+  };
+
+  const createVideoComment = async (videoId, text) => {
+    await createVideoCommentRequest(videoId, currentUserId, text);
 
     const updatedVideos = await getAllVideos();
     const updatedVideo = updatedVideos.find((video) => video.id === videoId);
@@ -160,6 +183,7 @@ function App() {
         onSubscribe={handleSubscribeToChannel}
         onLikeVideo={likeVideo}
         onDislikeVideo={dislikeVideo}
+        onCreateComment={createVideoComment}
       />
     );
   }

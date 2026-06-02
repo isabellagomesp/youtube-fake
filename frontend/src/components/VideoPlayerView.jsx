@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 function VideoPlayerView({
     video,
     currentUser,
@@ -6,11 +8,32 @@ function VideoPlayerView({
     onSubscribe,
     onLikeVideo,
     onDislikeVideo,
+    onCreateComment,
   }) {
+    const [commentText, setCommentText] = useState("");
     const isOwnVideo = video.ownerId === currentUser?.id;
   
     const isSubscribed =
       currentUser?.subscribedChannels?.includes(video.ownerId);
+
+    const handleSubmitComment = async () => {
+      const text = commentText.trim();
+
+      if (!text) {
+        return;
+      }
+
+      await onCreateComment(video.id, text);
+      setCommentText("");
+    };
+
+    const formatCommentDate = (createdAt) => {
+      if (!createdAt) {
+        return "";
+      }
+
+      return new Date(createdAt).toLocaleString("pt-BR");
+    };
   
     return (
       <div
@@ -173,6 +196,74 @@ function VideoPlayerView({
             <p style={{ marginTop: 8 }}>
               {video.description || "Sem descrição."}
             </p>
+          </div>
+
+          <div
+            style={{
+              marginTop: 20,
+              background: "white",
+              padding: 16,
+              borderRadius: 14,
+              textAlign: "left",
+            }}
+          >
+            <h3 style={{ marginTop: 0, marginBottom: 14 }}>
+              Comentarios
+            </h3>
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+              <input
+                type="text"
+                placeholder="Escreva um comentario"
+                value={commentText}
+                onChange={(event) => setCommentText(event.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #d4d4d8",
+                }}
+              />
+
+              <button
+                onClick={handleSubmitComment}
+                style={{
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "10px 16px",
+                  background: "#111",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Comentar
+              </button>
+            </div>
+
+            {(video.comments || []).length === 0 ? (
+              <p style={{ margin: 0, color: "#666" }}>
+                Ainda nao ha comentarios neste video.
+              </p>
+            ) : (
+              (video.comments || []).map((comment, index) => (
+                <div
+                  key={`${comment.userId}-${comment.createdAt}-${index}`}
+                  style={{
+                    borderTop: "1px solid #ececf1",
+                    paddingTop: 10,
+                    marginTop: 10,
+                  }}
+                >
+                  <p style={{ margin: "0 0 4px" }}>
+                    <strong>{comment.userName}</strong>: {comment.text}
+                  </p>
+                  <small style={{ color: "#666" }}>
+                    {formatCommentDate(comment.createdAt)}
+                  </small>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

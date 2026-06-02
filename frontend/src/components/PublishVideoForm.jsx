@@ -9,7 +9,7 @@ function PublishVideoForm({ onPublish, onClose }) {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!title || !file || !thumbnailFile) {
+    if (!title.trim() || !file || !thumbnailFile) {
       alert("Preencha todos os campos.");
       return;
     }
@@ -137,6 +137,7 @@ function PublishVideoForm({ onPublish, onClose }) {
           <input
             type="file"
             accept="image/*"
+            required
             onChange={(event) => {
               const selectedFile = event.target.files[0];
               setThumbnailFile(selectedFile);
@@ -152,12 +153,13 @@ function PublishVideoForm({ onPublish, onClose }) {
               fontWeight: "bold",
             }}
           >
-            Arquivo de vídeo
+            Arquivo de video
           </p>
 
           <input
             type="file"
             accept="video/*"
+            required
             onChange={(event) => {
               const selectedFile = event.target.files[0];
               setFile(selectedFile);
