@@ -66,4 +66,32 @@ export async function createVideoComment(videoId, userId, text) {
 export async function getUserLikedVideos(userId) {
     const response = await fetch(`${API_URL}/users/${userId}/liked-videos`);
     return response.json();
-  }
+}
+
+export async function getUserPlaylists(userId) {
+  const response = await fetch(`${API_URL}/users/${userId}/playlists`);
+  return response.json();
+}
+
+export async function createUserPlaylist(userId, name) {
+  const response = await fetch(`${API_URL}/users/${userId}/playlists`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+    }),
+  });
+
+  return response.json();
+}
+
+export async function addVideoToPlaylist(userId, playlistId, videoId) {
+  await fetch(
+    `${API_URL}/users/${userId}/playlists/${playlistId}/videos/${videoId}`,
+    {
+      method: "POST",
+    }
+  );
+}

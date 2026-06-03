@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PublishVideoForm from "./PublishVideoForm";
 
 function UserHomeView({
@@ -8,11 +8,16 @@ function UserHomeView({
   onPublishVideo,
   userVideos,
   likedVideos,
+  allVideos,
+  playlists,
+  onCreatePlaylist,
   onSelectVideo,
   onBackHome,
 }) {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("posts");
+  const [playlistName, setPlaylistName] = useState("");
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
 
   const subscribersCount = currentUser?.subscribers?.length || 0;
 
@@ -26,6 +31,53 @@ function UserHomeView({
   };
 
   const videosToShow = selectedTab === "posts" ? userVideos : likedVideos;
+
+  const selectedPlaylist = (playlists || []).find(
+    (playlist) => playlist.id === selectedPlaylistId
+  );
+
+  const playlistVideos = (selectedPlaylist?.videoIds || [])
+    .map((videoId) => (allVideos || []).find((video) => video.id === videoId))
+    .filter(Boolean);
+
+  const handleCreatePlaylist = async () => {
+    const cleanedName = playlistName.trim();
+
+    if (!cleanedName) {
+      alert("Informe o nome da playlist antes de criar.");
+      return;
+    }
+
+    await onCreatePlaylist(cleanedName);
+    setPlaylistName("");
+  };
+
+  const formatPlaylistDate = (createdAt) => {
+    if (!createdAt) {
+      return "";
+    }
+
+    return new Date(createdAt).toLocaleString("pt-BR");
+  };
+
+  const handleSelectPlaylist = (playlistId) => {
+    setSelectedPlaylistId(playlistId);
+  };
+
+  useEffect(() => {
+    if ((playlists || []).length === 0) {
+      setSelectedPlaylistId("");
+      return;
+    }
+
+    const playlistStillExists = (playlists || []).some(
+      (playlist) => playlist.id === selectedPlaylistId
+    );
+
+    if (!selectedPlaylistId || !playlistStillExists) {
+      setSelectedPlaylistId(playlists[0].id);
+    }
+  }, [playlists, selectedPlaylistId]);
 
   return (
     <div
@@ -243,9 +295,146 @@ function UserHomeView({
             </div>
 
             {selectedTab === "playlists" ? (
-              <p style={{ marginTop: 24, color: "#666" }}>
-                Nenhuma playlist criada ainda.
-              </p>
+              <div style={{ marginTop: 24 }}>
+                <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                  <input
+                    type="text"
+                    placeholder="Nome da playlist"
+                    value={playlistName}
+                    onChange={(event) => setPlaylistName(event.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      border: "1px solid #d4d4d8",
+                    }}
+                  />
+
+                  <button
+                    onClick={handleCreatePlaylist}
+                    style={{
+                      border: "none",
+                      borderRadius: 10,
+                      padding: "10px 16px",
+                      background: "#111",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Criar playlist
+                  </button>
+                </div>
+
+                {(playlists || []).length === 0 ? (
+                  <p style={{ color: "#666" }}>
+                    Nenhuma playlist criada ainda.
+                  </p>
+                ) : (
+                  <div style={{ display: "grid", gap: 18 }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gap: 14,
+                      }}
+                    >
+                      {(playlists || []).map((playlist) => {
+                        const isSelected = playlist.id === selectedPlaylistId;
+
+                        return (
+                          <div
+                            key={playlist.id}
+                            onClick={() => handleSelectPlaylist(playlist.id)}
+                            style={{
+                              border: isSelected
+                                ? "2px solid #111"
+                                : "1px solid #e5e7eb",
+                              background: "#f8fafc",
+                              borderRadius: 14,
+                              padding: 14,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <strong>{playlist.name}</strong>
+
+                            <p style={{ margin: "8px 0 4px", color: "#666" }}>
+                              {playlist.videosCount || 0} videos
+                            </p>
+
+                            <small style={{ color: "#666" }}>
+                              Criada em {formatPlaylistDate(playlist.createdAt)}
+                            </small>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div>
+                      <h3 style={{ marginBottom: 12 }}>
+                        Videos da playlist
+                      </h3>
+
+                      {playlistVideos.length === 0 ? (
+                        <p style={{ color: "#666" }}>
+                          Nenhum video nesta playlist.
+                        </p>
+                      ) : (
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(4, 1fr)",
+                            gap: 18,
+                          }}
+                        >
+                          {playlistVideos.map((video) => (
+                            <div
+                              key={video.id}
+                              onClick={() => onSelectVideo(video)}
+                              style={{
+                                borderRadius: 16,
+                                overflow: "hidden",
+                                background: "#f5f7fb",
+                                cursor: "pointer",
+                                border: "1px solid #e0e0e0",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "100%",
+                                  aspectRatio: "16 / 9",
+                                  background: "black",
+                                  color: "white",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: 13,
+                                }}
+                              >
+                                Thumbnail nao disponivel
+                              </div>
+
+                              <div style={{ padding: 12 }}>
+                                <strong>{video.title}</strong>
+
+                                <p
+                                  style={{
+                                    marginTop: 6,
+                                    color: "#666",
+                                    fontSize: 13,
+                                  }}
+                                >
+                                  {video.channelName}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <div
                 style={{

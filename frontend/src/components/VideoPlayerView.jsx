@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function VideoPlayerView({
     video,
@@ -9,12 +9,25 @@ function VideoPlayerView({
     onLikeVideo,
     onDislikeVideo,
     onCreateComment,
+    playlists,
+    onAddToPlaylist,
   }) {
     const [commentText, setCommentText] = useState("");
+    const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+    const [isPlaylistMenuOpen, setIsPlaylistMenuOpen] = useState(false);
     const isOwnVideo = video.ownerId === currentUser?.id;
   
     const isSubscribed =
       currentUser?.subscribedChannels?.includes(video.ownerId);
+
+    useEffect(() => {
+      if ((playlists || []).length > 0) {
+        setSelectedPlaylistId(playlists[0].id);
+        return;
+      }
+
+      setSelectedPlaylistId("");
+    }, [playlists]);
 
     const handleSubmitComment = async () => {
       const text = commentText.trim();
@@ -25,6 +38,26 @@ function VideoPlayerView({
 
       await onCreateComment(video.id, text);
       setCommentText("");
+    };
+
+    const handleAddVideoToPlaylist = async () => {
+      if (!selectedPlaylistId) {
+        alert("Selecione uma playlist para adicionar o video.");
+        return;
+      }
+
+      const selectedPlaylist = (playlists || []).find(
+        (playlist) => playlist.id === selectedPlaylistId
+      );
+
+      if (selectedPlaylist?.videoIds?.includes(video.id)) {
+        alert("Este video ja esta na playlist selecionada.");
+        return;
+      }
+
+      await onAddToPlaylist(selectedPlaylistId, video.id);
+      alert("Video adicionado a playlist com sucesso.");
+      setIsPlaylistMenuOpen(false);
     };
 
     const formatCommentDate = (createdAt) => {
@@ -121,7 +154,7 @@ function VideoPlayerView({
           <div
             style={{
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-start",
               gap: 16,
               marginBottom: 20,
             }}
@@ -148,38 +181,102 @@ function VideoPlayerView({
             )}
   
             <div style={{ flex: 1 }} />
-  
-            <button
-              onClick={() => onLikeVideo(video.id)}
-              style={{
-                border: "none",
-                borderRadius: 20,
-                padding: "10px 16px",
-                background: video.likedBy?.includes(currentUserId)
-                  ? "#dbeafe"
-                  : "white",
-                cursor: "pointer",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-              }}
-            >
-              👍 {video.likesCount || 0}
-            </button>
-  
-            <button
-              onClick={() => onDislikeVideo(video.id)}
-              style={{
-                border: "none",
-                borderRadius: 20,
-                padding: "10px 16px",
-                background: video.dislikedBy?.includes(currentUserId)
-                  ? "#fee2e2"
-                  : "white",
-                cursor: "pointer",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-              }}
-            >
-              👎 {video.dislikesCount || 0}
-            </button>
+
+            <div style={{ display: "grid", gap: 10, minWidth: 280 }}>
+              <button
+                onClick={() => setIsPlaylistMenuOpen((previous) => !previous)}
+                style={{
+                  border: "none",
+                  borderRadius: 20,
+                  padding: "10px 16px",
+                  background: "white",
+                  cursor: "pointer",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  fontWeight: "bold",
+                }}
+              >
+                Playlist
+              </button>
+
+              {isPlaylistMenuOpen && (
+                <div style={{ display: "flex", gap: 10 }}>
+                  {(playlists || []).length === 0 ? (
+                    <p style={{ margin: 0, color: "#666" }}>
+                      Crie uma playlist no perfil.
+                    </p>
+                  ) : (
+                    <>
+                      <select
+                        value={selectedPlaylistId}
+                        onChange={(event) => setSelectedPlaylistId(event.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: "10px 12px",
+                          borderRadius: 10,
+                          border: "1px solid #d4d4d8",
+                          background: "white",
+                        }}
+                      >
+                        {(playlists || []).map((playlist) => (
+                          <option key={playlist.id} value={playlist.id}>
+                            {playlist.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        onClick={handleAddVideoToPlaylist}
+                        style={{
+                          border: "none",
+                          borderRadius: 10,
+                          padding: "10px 16px",
+                          background: "#111",
+                          color: "white",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Adicionar
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => onLikeVideo(video.id)}
+                  style={{
+                    border: "none",
+                    borderRadius: 20,
+                    padding: "10px 16px",
+                    background: video.likedBy?.includes(currentUserId)
+                      ? "#dbeafe"
+                      : "white",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  👍 {video.likesCount || 0}
+                </button>
+
+                <button
+                  onClick={() => onDislikeVideo(video.id)}
+                  style={{
+                    border: "none",
+                    borderRadius: 20,
+                    padding: "10px 16px",
+                    background: video.dislikedBy?.includes(currentUserId)
+                      ? "#fee2e2"
+                      : "white",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  👎 {video.dislikesCount || 0}
+                </button>
+              </div>
+            </div>
           </div>
   
           <div

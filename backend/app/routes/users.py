@@ -1,8 +1,21 @@
 from fastapi import APIRouter
 from bson import ObjectId
 from app.database import db
+from datetime import datetime, timezone
 
 router = APIRouter()
+
+
+def serialize_playlist(playlist: dict):
+    video_ids = playlist.get("videoIds", [])
+
+    return {
+        "id": playlist.get("id", ""),
+        "name": playlist.get("name", ""),
+        "videoIds": video_ids,
+        "videosCount": len(video_ids),
+        "createdAt": playlist.get("createdAt", ""),
+    }
 
 @router.post("/users")
 def create_user(user: dict):
@@ -12,7 +25,8 @@ def create_user(user: dict):
         "subscribedChannels": [],
         "subscribers": [],
         "videos": [],
-        "likedVideos": []
+        "likedVideos": [],
+        "playlists": [],
     }
 
     result = db.users.insert_one(new_user)
@@ -34,10 +48,89 @@ def list_users():
             "subscribedChannels": user.get("subscribedChannels", []),
             "subscribers": user.get("subscribers", []),
             "videos": user.get("videos", []),
-            "likedVideos": user.get("likedVideos", [])
+            "likedVideos": user.get("likedVideos", []),
+            "playlists": [
+                serialize_playlist(playlist)
+                for playlist in user.get("playlists", [])
+            ],
         })
 
     return users
+
+
+@router.get("/users/{user_id}/playlists")
+def list_user_playlists(user_id: str):
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        return {"message": "Usuário não encontrado"}
+
+    return [
+        serialize_playlist(playlist)
+        for playlist in user.get("playlists", [])
+    ]
+
+
+@router.post("/users/{user_id}/playlists")
+def create_user_playlist(user_id: str, payload: dict):
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        return {"message": "Usuário não encontrado"}
+
+    name = payload.get("name", "").strip()
+
+    if not name:
+        return {"message": "Nome da playlist é obrigatório"}
+
+    new_playlist = {
+        "id": str(ObjectId()),
+        "name": name,
+        "videoIds": [],
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+    }
+
+    db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$push": {"playlists": new_playlist}},
+    )
+
+    return {
+        "message": "Playlist criada com sucesso",
+        "playlist": serialize_playlist(new_playlist),
+    }
+
+
+@router.post("/users/{user_id}/playlists/{playlist_id}/videos/{video_id}")
+def add_video_to_playlist(user_id: str, playlist_id: str, video_id: str):
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        return {"message": "Usuário não encontrado"}
+
+    playlist = next(
+        (
+            playlist
+            for playlist in user.get("playlists", [])
+            if playlist.get("id") == playlist_id
+        ),
+        None,
+    )
+
+    if not playlist:
+        return {"message": "Playlist não encontrada"}
+
+    video = db.videos.find_one({"_id": ObjectId(video_id)})
+
+    if not video:
+        return {"message": "Vídeo não encontrado"}
+
+    db.users.update_one(
+        {"_id": ObjectId(user_id), "playlists.id": playlist_id},
+        {"$addToSet": {"playlists.$.videoIds": video_id}},
+    )
+
+    return {"message": "Vídeo adicionado à playlist"}
 
 @router.post("/users/{user_id}/subscribe/{channel_owner_id}")
 def subscribe_to_channel(user_id: str, channel_owner_id: str):

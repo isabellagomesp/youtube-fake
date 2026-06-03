@@ -14,6 +14,9 @@ import {
   likeVideo as likeVideoRequest,
   dislikeVideo as dislikeVideoRequest,
   createVideoComment as createVideoCommentRequest,
+  getUserPlaylists,
+  createUserPlaylist,
+  addVideoToPlaylist,
 } from "./services/api";
 
 function App() {
@@ -27,6 +30,7 @@ function App() {
   const [allVideos, setAllVideos] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [likedVideos, setLikedVideos] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -52,12 +56,18 @@ function App() {
     setLikedVideos(data);
   };
 
+  const fetchPlaylists = async (userId) => {
+    const data = await getUserPlaylists(userId);
+    setPlaylists(Array.isArray(data) ? data : []);
+  };
+
   const handleLogin = async (userId) => {
     setCurrentUserId(userId);
     setCurrentPage("home");
   
     await fetchUserVideos(userId);
     await fetchLikedVideos(userId);
+    await fetchPlaylists(userId);
     await fetchAllVideos();
   };
 
@@ -65,6 +75,7 @@ function App() {
     setCurrentUserId("");
     setSelectedVideo(null);
     setCurrentPage("home");
+    setPlaylists([]);
   };
 
   const handleSubscribeToChannel = async (channelOwnerId) => {
@@ -153,6 +164,16 @@ function App() {
     }
   };
 
+  const handleCreatePlaylist = async (name) => {
+    await createUserPlaylist(currentUserId, name);
+    await fetchPlaylists(currentUserId);
+  };
+
+  const handleAddVideoToPlaylist = async (playlistId, videoId) => {
+    await addVideoToPlaylist(currentUserId, playlistId, videoId);
+    await fetchPlaylists(currentUserId);
+  };
+
   const filteredVideos = allVideos.filter((video) => {
     const search = searchText.trim().toLowerCase();
   
@@ -184,6 +205,8 @@ function App() {
         onLikeVideo={likeVideo}
         onDislikeVideo={dislikeVideo}
         onCreateComment={createVideoComment}
+        playlists={playlists}
+        onAddToPlaylist={handleAddVideoToPlaylist}
       />
     );
   }
@@ -217,6 +240,9 @@ function App() {
       onPublishVideo={publishVideo}
       userVideos={userVideos}
       likedVideos={likedVideos}
+      allVideos={allVideos}
+      playlists={playlists}
+      onCreatePlaylist={handleCreatePlaylist}
       onSelectVideo={(video) => {
         setSelectedVideo({
           ...video,
