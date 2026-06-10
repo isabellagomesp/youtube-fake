@@ -25,7 +25,6 @@ function App() {
   const [userVideos, setUserVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [localVideoUrls, setLocalVideoUrls] = useState({});
-  const [localThumbnailUrls, setLocalThumbnailUrls] = useState({});
   const [currentPage, setCurrentPage] = useState("home");
   const [allVideos, setAllVideos] = useState([]);
   const [searchText, setSearchText] = useState("");
@@ -36,6 +35,14 @@ function App() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
   const fetchUsers = async () => {
     const data = await getUsers();
@@ -109,23 +116,18 @@ function App() {
   };
 
   const publishVideo = async (video) => {
-    const data = await publishUserVideo(currentUserId, video);
+    let thumbnailData = "";
+    if (video.thumbnailFile) {
+      thumbnailData = await toBase64(video.thumbnailFile);
+    }
+
+    const data = await publishUserVideo(currentUserId, { ...video, thumbnailData });
 
     if (video.file) {
       const localUrl = URL.createObjectURL(video.file);
-
       setLocalVideoUrls((previous) => ({
         ...previous,
         [data.id]: localUrl,
-      }));
-    }
-
-    if (video.thumbnailFile) {
-      const localThumbnailUrl = URL.createObjectURL(video.thumbnailFile);
-
-      setLocalThumbnailUrls((previous) => ({
-        ...previous,
-        [data.id]: localThumbnailUrl,
       }));
     }
 
@@ -148,7 +150,6 @@ function App() {
       setSelectedVideo({
         ...updatedVideo,
         localUrl: localVideoUrls[videoId],
-        localThumbnailUrl: localThumbnailUrls[videoId],
       });
     }
   };
@@ -167,7 +168,6 @@ function App() {
       setSelectedVideo({
         ...updatedVideo,
         localUrl: localVideoUrls[videoId],
-        localThumbnailUrl: localThumbnailUrls[videoId],
       });
     }
   };
@@ -184,7 +184,6 @@ function App() {
       setSelectedVideo({
         ...updatedVideo,
         localUrl: localVideoUrls[videoId],
-        localThumbnailUrl: localThumbnailUrls[videoId],
       });
     }
   };
@@ -250,10 +249,8 @@ function App() {
           setSelectedVideo({
             ...video,
             localUrl: localVideoUrls[video.id],
-            localThumbnailUrl: localThumbnailUrls[video.id],
           });
         }}
-        localThumbnailUrls={localThumbnailUrls}
       />
     );
   }
@@ -276,8 +273,7 @@ function App() {
           setSelectedVideo({
             ...video,
             localUrl: localVideoUrls[video.id],
-            localThumbnailUrl: localThumbnailUrls[video.id],
-          });
+                      });
         }}
         onBackHome={() => {
           setChannelView(null);
@@ -304,8 +300,7 @@ function App() {
         setSelectedVideo({
           ...video,
           localUrl: localVideoUrls[video.id],
-          localThumbnailUrl: localThumbnailUrls[video.id],
-        });
+                  });
       }}
       onBackHome={() => setCurrentPage("home")}
     />

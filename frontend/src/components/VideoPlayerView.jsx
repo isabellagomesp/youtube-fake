@@ -135,8 +135,16 @@ function VideoPlayerView({
                 }}
               />
             ) : (
-              <p style={{ color: "white" }}>
-                Arquivo de vídeo não disponível nesta sessão
+              <p
+                style={{
+                  color: "white",
+                  padding: "0 32px",
+                  textAlign: "center",
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                }}
+              >
+                {video.description || "Arquivo de vídeo não disponível nesta sessão."}
               </p>
             )}
           </div>

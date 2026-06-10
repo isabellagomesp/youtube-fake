@@ -32,6 +32,7 @@ export async function publishUserVideo(userId, video) {
         description: video.description,
         fileName: video.fileName,
         thumbnailFileName: video.thumbnailFileName,
+        thumbnailData: video.thumbnailData || "",
     }),
   });
 

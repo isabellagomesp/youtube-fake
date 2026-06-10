@@ -5,7 +5,6 @@ function HomeView({
     onSearchChange,
     onOpenProfile,
     onSelectVideo,
-    localThumbnailUrls,
   }) {
     return (
       <div
@@ -109,9 +108,9 @@ function HomeView({
                 transition: "0.2s",
               }}
             >
-              {localThumbnailUrls?.[video.id] ? (
+              {video.thumbnailData ? (
                 <img
-                  src={localThumbnailUrls[video.id]}
+                  src={video.thumbnailData}
                   alt={video.title}
                   style={{
                     width: "100%",
@@ -122,18 +121,18 @@ function HomeView({
                 />
               ) : (
                 <div
-                    style={{
-                        width: "100%",
-                        height: 220,
-                        backgroundColor: "#d9d9d9",
-                        color: "black",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 14,
-                    }}
-                    >
-                    Thumbnail não disponível
+                  style={{
+                    width: "100%",
+                    height: 220,
+                    backgroundColor: "#d9d9d9",
+                    color: "black",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 14,
+                  }}
+                >
+                  Thumbnail não disponível
                 </div>
               )}
   

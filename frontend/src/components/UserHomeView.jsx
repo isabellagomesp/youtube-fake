@@ -409,20 +409,33 @@ function UserHomeView({
                                 border: "1px solid #e0e0e0",
                               }}
                             >
-                              <div
-                                style={{
-                                  width: "100%",
-                                  aspectRatio: "16 / 9",
-                                  background: "black",
-                                  color: "white",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 13,
-                                }}
-                              >
-                                Thumbnail nao disponivel
-                              </div>
+                              {video.thumbnailData ? (
+                                <img
+                                  src={video.thumbnailData}
+                                  alt={video.title}
+                                  style={{
+                                    width: "100%",
+                                    aspectRatio: "16 / 9",
+                                    objectFit: "cover",
+                                    display: "block",
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    aspectRatio: "16 / 9",
+                                    background: "#d9d9d9",
+                                    color: "#666",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: 13,
+                                  }}
+                                >
+                                  Thumbnail não disponível
+                                </div>
+                              )}
 
                               <div style={{ padding: 12 }}>
                                 <strong>{video.title}</strong>
@@ -466,20 +479,33 @@ function UserHomeView({
                       border: "1px solid #e0e0e0",
                     }}
                   >
-                    <div
-                      style={{
-                        width: "100%",
-                        aspectRatio: "16 / 9",
-                        background: "black",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 13,
-                      }}
-                    >
-                      Thumbnail não disponível
-                    </div>
+                    {video.thumbnailData ? (
+                      <img
+                        src={video.thumbnailData}
+                        alt={video.title}
+                        style={{
+                          width: "100%",
+                          aspectRatio: "16 / 9",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: "100%",
+                          aspectRatio: "16 / 9",
+                          background: "#d9d9d9",
+                          color: "#666",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 13,
+                        }}
+                      >
+                        Thumbnail não disponível
+                      </div>
+                    )}
 
                     <div style={{ padding: 12 }}>
                       <strong>{video.title}</strong>
