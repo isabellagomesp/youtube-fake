@@ -31,6 +31,7 @@ function App() {
   const [searchText, setSearchText] = useState("");
   const [likedVideos, setLikedVideos] = useState([]);
   const [playlists, setPlaylists] = useState([]);
+  const [channelView, setChannelView] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -76,6 +77,30 @@ function App() {
     setSelectedVideo(null);
     setCurrentPage("home");
     setPlaylists([]);
+  };
+
+  const handleViewChannel = async (channelOwnerId) => {
+    if (channelOwnerId === currentUserId) {
+      setSelectedVideo(null);
+      setCurrentPage("profile");
+      return;
+    }
+
+    const channelUser = users.find((u) => u.id === channelOwnerId);
+    const [videos, liked, playlists] = await Promise.all([
+      getUserVideos(channelOwnerId),
+      getUserLikedVideos(channelOwnerId),
+      getUserPlaylists(channelOwnerId),
+    ]);
+
+    setChannelView({
+      user: channelUser,
+      videos: videos || [],
+      likedVideos: liked || [],
+      playlists: Array.isArray(playlists) ? playlists : [],
+    });
+    setSelectedVideo(null);
+    setCurrentPage("channel");
   };
 
   const handleSubscribeToChannel = async (channelOwnerId) => {
@@ -207,6 +232,7 @@ function App() {
         onCreateComment={createVideoComment}
         playlists={playlists}
         onAddToPlaylist={handleAddVideoToPlaylist}
+        onViewChannel={handleViewChannel}
       />
     );
   }
@@ -232,10 +258,41 @@ function App() {
     );
   }
 
+  if (currentPage === "channel" && channelView) {
+    return (
+      <UserHomeView
+        users={users}
+        currentUser={currentUser}
+        channelOwner={channelView.user}
+        isOwnChannel={false}
+        onLogout={handleLogout}
+        onPublishVideo={publishVideo}
+        userVideos={channelView.videos}
+        likedVideos={channelView.likedVideos}
+        allVideos={allVideos}
+        playlists={channelView.playlists}
+        onCreatePlaylist={handleCreatePlaylist}
+        onSelectVideo={(video) => {
+          setSelectedVideo({
+            ...video,
+            localUrl: localVideoUrls[video.id],
+            localThumbnailUrl: localThumbnailUrls[video.id],
+          });
+        }}
+        onBackHome={() => {
+          setChannelView(null);
+          setCurrentPage("home");
+        }}
+      />
+    );
+  }
+
   return (
     <UserHomeView
       users={users}
       currentUser={currentUser}
+      channelOwner={currentUser}
+      isOwnChannel={true}
       onLogout={handleLogout}
       onPublishVideo={publishVideo}
       userVideos={userVideos}

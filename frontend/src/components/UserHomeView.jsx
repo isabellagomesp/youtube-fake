@@ -4,6 +4,8 @@ import PublishVideoForm from "./PublishVideoForm";
 function UserHomeView({
   users,
   currentUser,
+  channelOwner,
+  isOwnChannel,
   onLogout,
   onPublishVideo,
   userVideos,
@@ -19,10 +21,12 @@ function UserHomeView({
   const [playlistName, setPlaylistName] = useState("");
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
 
-  const subscribersCount = currentUser?.subscribers?.length || 0;
+  const owner = channelOwner || currentUser;
+
+  const subscribersCount = owner?.subscribers?.length || 0;
 
   const subscribedChannels = users.filter((user) =>
-    currentUser?.subscribedChannels?.includes(user.id)
+    owner?.subscribedChannels?.includes(user.id)
   );
 
   const handlePublishVideo = (video) => {
@@ -121,20 +125,22 @@ function UserHomeView({
           </h1>
         </div>
 
-        <button
-          onClick={() => setIsPublishModalOpen(true)}
-          style={{
-            border: "none",
-            background: "white",
-            padding: "12px 20px",
-            borderRadius: 24,
-            cursor: "pointer",
-            fontWeight: "bold",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-          }}
-        >
-          + Criar
-        </button>
+        {isOwnChannel && (
+          <button
+            onClick={() => setIsPublishModalOpen(true)}
+            style={{
+              border: "none",
+              background: "white",
+              padding: "12px 20px",
+              borderRadius: 24,
+              cursor: "pointer",
+              fontWeight: "bold",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+            }}
+          >
+            + Criar
+          </button>
+        )}
       </header>
 
       <div
@@ -206,22 +212,24 @@ function UserHomeView({
                     color: "#111",
                     }}
                 >
-                    {currentUser?.channelName}
+                    {owner?.channelName}
                 </h2>
 
-                <button
-                    onClick={onLogout}
-                    style={{
-                    border: "none",
-                    background: "#f5f7fb",
-                    padding: "10px 18px",
-                    borderRadius: 20,
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                    }}
-                >
-                    Trocar usuário
-                </button>
+                {isOwnChannel && (
+                  <button
+                      onClick={onLogout}
+                      style={{
+                      border: "none",
+                      background: "#f5f7fb",
+                      padding: "10px 18px",
+                      borderRadius: 20,
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                      }}
+                  >
+                      Trocar usuário
+                  </button>
+                )}
             </div>
 
             <p
@@ -231,7 +239,7 @@ function UserHomeView({
                 wordBreak: "break-all",
               }}
             >
-              ID: {currentUser?.id} · {subscribersCount} inscritos
+              ID: {owner?.id} · {subscribersCount} inscritos
             </p>
 
             <div
@@ -296,35 +304,37 @@ function UserHomeView({
 
             {selectedTab === "playlists" ? (
               <div style={{ marginTop: 24 }}>
-                <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-                  <input
-                    type="text"
-                    placeholder="Nome da playlist"
-                    value={playlistName}
-                    onChange={(event) => setPlaylistName(event.target.value)}
-                    style={{
-                      flex: 1,
-                      padding: "10px 12px",
-                      borderRadius: 10,
-                      border: "1px solid #d4d4d8",
-                    }}
-                  />
+                {isOwnChannel && (
+                  <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                    <input
+                      type="text"
+                      placeholder="Nome da playlist"
+                      value={playlistName}
+                      onChange={(event) => setPlaylistName(event.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: "1px solid #d4d4d8",
+                      }}
+                    />
 
-                  <button
-                    onClick={handleCreatePlaylist}
-                    style={{
-                      border: "none",
-                      borderRadius: 10,
-                      padding: "10px 16px",
-                      background: "#111",
-                      color: "white",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Criar playlist
-                  </button>
-                </div>
+                    <button
+                      onClick={handleCreatePlaylist}
+                      style={{
+                        border: "none",
+                        borderRadius: 10,
+                        padding: "10px 16px",
+                        background: "#111",
+                        color: "white",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Criar playlist
+                    </button>
+                  </div>
+                )}
 
                 {(playlists || []).length === 0 ? (
                   <p style={{ color: "#666" }}>

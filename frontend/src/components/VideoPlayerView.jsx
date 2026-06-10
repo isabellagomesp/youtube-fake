@@ -11,6 +11,7 @@ function VideoPlayerView({
     onCreateComment,
     playlists,
     onAddToPlaylist,
+    onViewChannel,
   }) {
     const [commentText, setCommentText] = useState("");
     const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
@@ -151,38 +152,88 @@ function VideoPlayerView({
             {video.title}
           </h2>
   
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 16,
-              marginBottom: 20,
-            }}
-          >
-            <strong style={{ fontSize: 16 }}>
-              {video.channelName}
-            </strong>
-  
-            {!isOwnVideo && (
-              <button
-                onClick={() => onSubscribe(video.ownerId)}
+          <div style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                border: "1px solid #e0e0e0",
+                borderRadius: 16,
+                padding: "16px 20px",
+                background: "white",
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <span
+                onClick={() => onViewChannel && onViewChannel(video.ownerId)}
                 style={{
-                  border: "none",
-                  borderRadius: 20,
-                  padding: "10px 18px",
-                  background: isSubscribed ? "#e5e5e5" : "#111",
-                  color: isSubscribed ? "#555" : "white",
-                  cursor: isSubscribed ? "pointer" : "pointer",
+                  fontSize: 16,
                   fontWeight: "bold",
+                  cursor: onViewChannel ? "pointer" : "default",
+                  color: onViewChannel ? "#111" : "#111",
+                  textDecoration: onViewChannel ? "underline" : "none",
+                  textUnderlineOffset: 3,
                 }}
               >
-                {isSubscribed ? "Inscrito" : "Inscrever-se"}
-              </button>
-            )}
-  
-            <div style={{ flex: 1 }} />
+                {video.channelName}
+              </span>
 
-            <div style={{ display: "grid", gap: 10, minWidth: 280 }}>
+              {!isOwnVideo && (
+                <button
+                  onClick={() => onSubscribe(video.ownerId)}
+                  style={{
+                    border: "none",
+                    borderRadius: 20,
+                    padding: "10px 18px",
+                    background: isSubscribed ? "#e5e5e5" : "#111",
+                    color: isSubscribed ? "#555" : "white",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {isSubscribed ? "Inscrito" : "Inscrever-se"}
+                </button>
+              )}
+
+              <div style={{ flex: 1 }} />
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => onLikeVideo(video.id)}
+                  style={{
+                    border: "none",
+                    borderRadius: 20,
+                    padding: "10px 16px",
+                    background: video.likedBy?.includes(currentUserId)
+                      ? "#dbeafe"
+                      : "#f5f7fb",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  👍 {video.likesCount || 0}
+                </button>
+
+                <button
+                  onClick={() => onDislikeVideo(video.id)}
+                  style={{
+                    border: "none",
+                    borderRadius: 20,
+                    padding: "10px 16px",
+                    background: video.dislikedBy?.includes(currentUserId)
+                      ? "#fee2e2"
+                      : "#f5f7fb",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  👎 {video.dislikesCount || 0}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12 }}>
               <button
                 onClick={() => setIsPlaylistMenuOpen((previous) => !previous)}
                 style={{
@@ -199,7 +250,7 @@ function VideoPlayerView({
               </button>
 
               {isPlaylistMenuOpen && (
-                <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
                   {(playlists || []).length === 0 ? (
                     <p style={{ margin: 0, color: "#666" }}>
                       Crie uma playlist no perfil.
@@ -242,40 +293,6 @@ function VideoPlayerView({
                   )}
                 </div>
               )}
-
-              <div style={{ display: "flex", gap: 10 }}>
-                <button
-                  onClick={() => onLikeVideo(video.id)}
-                  style={{
-                    border: "none",
-                    borderRadius: 20,
-                    padding: "10px 16px",
-                    background: video.likedBy?.includes(currentUserId)
-                      ? "#dbeafe"
-                      : "white",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  👍 {video.likesCount || 0}
-                </button>
-
-                <button
-                  onClick={() => onDislikeVideo(video.id)}
-                  style={{
-                    border: "none",
-                    borderRadius: 20,
-                    padding: "10px 16px",
-                    background: video.dislikedBy?.includes(currentUserId)
-                      ? "#fee2e2"
-                      : "white",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  👎 {video.dislikesCount || 0}
-                </button>
-              </div>
             </div>
           </div>
   
