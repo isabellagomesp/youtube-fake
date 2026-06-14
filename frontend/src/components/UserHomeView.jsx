@@ -19,6 +19,7 @@ function UserHomeView({
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("posts");
   const [playlistName, setPlaylistName] = useState("");
+  const [playlistVisibility, setPlaylistVisibility] = useState("public");
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
 
   const owner = channelOwner || currentUser;
@@ -52,8 +53,13 @@ function UserHomeView({
       return;
     }
 
-    await onCreatePlaylist(cleanedName);
+    await onCreatePlaylist(cleanedName, playlistVisibility);
     setPlaylistName("");
+    setPlaylistVisibility("public");
+  };
+
+  const getPlaylistVisibilityLabel = (visibility) => {
+    return visibility === "private" ? "Privada" : "Pública";
   };
 
   const formatPlaylistDate = (createdAt) => {
@@ -168,9 +174,7 @@ function UserHomeView({
             <div>
               {subscribedChannels.map((channel, index) => (
                 <div key={channel.id}>
-                  <p style={{ margin: "12px 0" }}>
-                    {channel.channelName}
-                  </p>
+                  <p style={{ margin: "12px 0" }}>{channel.channelName}</p>
 
                   {index !== subscribedChannels.length - 1 && (
                     <div
@@ -198,38 +202,38 @@ function UserHomeView({
             }}
           >
             <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 16,
+              }}
+            >
+              <h2
                 style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 16,
+                  margin: 0,
+                  fontSize: 32,
+                  color: "#111",
                 }}
-                >
-                <h2
-                    style={{
-                    margin: 0,
-                    fontSize: 32,
-                    color: "#111",
-                    }}
-                >
-                    {owner?.channelName}
-                </h2>
+              >
+                {owner?.channelName}
+              </h2>
 
-                {isOwnChannel && (
-                  <button
-                      onClick={onLogout}
-                      style={{
-                      border: "none",
-                      background: "#f5f7fb",
-                      padding: "10px 18px",
-                      borderRadius: 20,
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                      }}
-                  >
-                      Trocar usuário
-                  </button>
-                )}
+              {isOwnChannel && (
+                <button
+                  onClick={onLogout}
+                  style={{
+                    border: "none",
+                    background: "#f5f7fb",
+                    padding: "10px 18px",
+                    borderRadius: 20,
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Trocar usuário
+                </button>
+              )}
             </div>
 
             <p
@@ -274,7 +278,8 @@ function UserHomeView({
                   background: "transparent",
                   padding: "0 0 12px",
                   cursor: "pointer",
-                  fontWeight: selectedTab === "playlists" ? "bold" : "normal",
+                  fontWeight:
+                    selectedTab === "playlists" ? "bold" : "normal",
                   borderBottom:
                     selectedTab === "playlists"
                       ? "3px solid #111"
@@ -305,33 +310,60 @@ function UserHomeView({
             {selectedTab === "playlists" ? (
               <div style={{ marginTop: 24 }}>
                 {isOwnChannel && (
-                  <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      marginBottom: 16,
+                    }}
+                  >
                     <input
                       type="text"
                       placeholder="Nome da playlist"
                       value={playlistName}
                       onChange={(event) => setPlaylistName(event.target.value)}
                       style={{
-                        flex: 1,
+                        flex: "1 1 220px",
+                        minWidth: 180,
                         padding: "10px 12px",
                         borderRadius: 10,
                         border: "1px solid #d4d4d8",
+                        boxSizing: "border-box",
                       }}
                     />
+
+                    <select
+                      value={playlistVisibility}
+                      onChange={(event) =>
+                        setPlaylistVisibility(event.target.value)
+                      }
+                      style={{
+                        width: 130,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: "1px solid #d4d4d8",
+                        background: "white",
+                      }}
+                    >
+                      <option value="public">Pública</option>
+                      <option value="private">Privada</option>
+                    </select>
 
                     <button
                       onClick={handleCreatePlaylist}
                       style={{
                         border: "none",
                         borderRadius: 10,
-                        padding: "10px 16px",
+                        padding: "10px 14px",
                         background: "#111",
                         color: "white",
                         cursor: "pointer",
                         fontWeight: "bold",
                       }}
                     >
-                      Criar playlist
+                      Criar
                     </button>
                   </div>
                 )}
@@ -368,6 +400,16 @@ function UserHomeView({
                           >
                             <strong>{playlist.name}</strong>
 
+                            <p
+                              style={{
+                                margin: "6px 0 0",
+                                color: "#666",
+                                fontSize: 13,
+                              }}
+                            >
+                              {getPlaylistVisibilityLabel(playlist.visibility)}
+                            </p>
+
                             <p style={{ margin: "8px 0 4px", color: "#666" }}>
                               {playlist.videosCount || 0} videos
                             </p>
@@ -381,9 +423,7 @@ function UserHomeView({
                     </div>
 
                     <div>
-                      <h3 style={{ marginBottom: 12 }}>
-                        Videos da playlist
-                      </h3>
+                      <h3 style={{ marginBottom: 12 }}>Videos da playlist</h3>
 
                       {playlistVideos.length === 0 ? (
                         <p style={{ color: "#666" }}>
@@ -527,8 +567,7 @@ function UserHomeView({
                           fontSize: 13,
                         }}
                       >
-                        👍 {video.likesCount || 0} · 👎{" "}
-                        {video.dislikesCount || 0}
+                        👍 {video.likesCount || 0} · 👎 {video.dislikesCount || 0}
                       </p>
                     </div>
                   </div>
@@ -559,8 +598,8 @@ function UserHomeView({
             }}
           >
             <PublishVideoForm
-                onPublish={handlePublishVideo}
-                onClose={() => setIsPublishModalOpen(false)}
+              onPublish={handlePublishVideo}
+              onClose={() => setIsPublishModalOpen(false)}
             />
           </div>
         </div>

@@ -12,6 +12,7 @@ def serialize_playlist(playlist: dict):
     return {
         "id": playlist.get("id", ""),
         "name": playlist.get("name", ""),
+        "visibility": playlist.get("visibility", "public"),
         "videoIds": video_ids,
         "videosCount": len(video_ids),
         "createdAt": playlist.get("createdAt", ""),
@@ -79,13 +80,18 @@ def create_user_playlist(user_id: str, payload: dict):
         return {"message": "Usuário não encontrado"}
 
     name = payload.get("name", "").strip()
+    visibility = payload.get("visibility", "public")
 
     if not name:
         return {"message": "Nome da playlist é obrigatório"}
 
+    if visibility not in {"public", "private"}:
+        return {"message": "Visibilidade da playlist inválida"}
+
     new_playlist = {
         "id": str(ObjectId()),
         "name": name,
+        "visibility": visibility,
         "videoIds": [],
         "createdAt": datetime.now(timezone.utc).isoformat(),
     }

@@ -74,7 +74,7 @@ export async function getUserPlaylists(userId) {
   return response.json();
 }
 
-export async function createUserPlaylist(userId, name) {
+export async function createUserPlaylist(userId, name, visibility = "public") {
   const response = await fetch(`${API_URL}/users/${userId}/playlists`, {
     method: "POST",
     headers: {
@@ -82,6 +82,7 @@ export async function createUserPlaylist(userId, name) {
     },
     body: JSON.stringify({
       name,
+      visibility,
     }),
   });
 

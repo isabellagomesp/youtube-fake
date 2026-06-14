@@ -100,11 +100,15 @@ function App() {
       getUserPlaylists(channelOwnerId),
     ]);
 
+    const visiblePlaylists = Array.isArray(playlists)
+      ? playlists.filter((playlist) => playlist.visibility !== "private")
+      : [];
+
     setChannelView({
       user: channelUser,
       videos: videos || [],
       likedVideos: liked || [],
-      playlists: Array.isArray(playlists) ? playlists : [],
+      playlists: visiblePlaylists,
     });
     setSelectedVideo(null);
     setCurrentPage("channel");
@@ -188,8 +192,8 @@ function App() {
     }
   };
 
-  const handleCreatePlaylist = async (name) => {
-    await createUserPlaylist(currentUserId, name);
+  const handleCreatePlaylist = async (name, visibility) => {
+    await createUserPlaylist(currentUserId, name, visibility);
     await fetchPlaylists(currentUserId);
   };
 
