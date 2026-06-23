@@ -17,6 +17,7 @@ import {
   getUserPlaylists,
   createUserPlaylist,
   addVideoToPlaylist,
+  viewVideo as viewVideoRequest,
 } from "./services/api";
 
 function App() {
@@ -202,6 +203,22 @@ function App() {
     await fetchPlaylists(currentUserId);
   };
 
+  const handleViewVideo = async (videoId) => {
+    await viewVideoRequest(videoId);
+
+    const updatedVideos = await getAllVideos();
+    const updatedVideo = updatedVideos.find((video) => video.id === videoId);
+
+    setAllVideos(updatedVideos);
+
+    if (updatedVideo) {
+      setSelectedVideo({
+        ...updatedVideo,
+        localUrl: localVideoUrls[videoId],
+      });
+    }
+  };
+
   const filteredVideos = allVideos.filter((video) => {
     const search = searchText.trim().toLowerCase();
   
@@ -236,6 +253,7 @@ function App() {
         playlists={playlists}
         onAddToPlaylist={handleAddVideoToPlaylist}
         onViewChannel={handleViewChannel}
+        onViewVideo={handleViewVideo}
       />
     );
   }

@@ -97,3 +97,9 @@ export async function addVideoToPlaylist(userId, playlistId, videoId) {
     }
   );
 }
+
+export async function viewVideo(videoId) {
+  await fetch(`${API_URL}/videos/${videoId}/view`, {
+    method: "POST",
+  });
+}

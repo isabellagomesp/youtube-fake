@@ -35,6 +35,7 @@ def serialize_video(video: dict):
         "dislikedBy": video.get("dislikedBy", []),
         "likesCount": len(video.get("likedBy", [])),
         "dislikesCount": len(video.get("dislikedBy", [])),
+        "viewsCount": video.get("viewsCount", 0),
         "comments": comments,
     }
 
@@ -202,6 +203,20 @@ def dislike_video(video_id: str, user_id: str):
     )
 
     return {"message": "Vídeo descurtido"}
+
+@router.post("/videos/{video_id}/view")
+def view_video(video_id: str):
+    video = db.videos.find_one({"_id": ObjectId(video_id)})
+
+    if not video:
+        return {"message": "Vídeo não encontrado"}
+
+    db.videos.update_one(
+        {"_id": ObjectId(video_id)},
+        {"$inc": {"viewsCount": 1}}
+    )
+
+    return {"message": "Visualização registrada"}
 
 @router.get("/users/{user_id}/liked-videos")
 def list_user_liked_videos(user_id: str):

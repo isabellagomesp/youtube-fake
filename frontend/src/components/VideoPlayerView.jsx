@@ -12,10 +12,12 @@ function VideoPlayerView({
     playlists,
     onAddToPlaylist,
     onViewChannel,
+    onViewVideo,
   }) {
     const [commentText, setCommentText] = useState("");
     const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
     const [isPlaylistMenuOpen, setIsPlaylistMenuOpen] = useState(false);
+    const [hasViewed, setHasViewed] = useState(false);
     const isOwnVideo = video.ownerId === currentUser?.id;
   
     const isSubscribed =
@@ -30,8 +32,16 @@ function VideoPlayerView({
       setSelectedPlaylistId("");
     }, [playlists]);
 
-    const handleSubmitComment = async () => {
-      const text = commentText.trim();
+    const handleView = async () => {
+      if (hasViewed || !onViewVideo) {
+        return;
+      }
+
+      setHasViewed(true);
+      await onViewVideo(video.id);
+    };
+
+    const handleSubmitComment = async () => {      const text = commentText.trim();
 
       if (!text) {
         return;
@@ -136,12 +146,14 @@ function VideoPlayerView({
               />
             ) : (
               <p
+                onClick={handleView}
                 style={{
                   color: "white",
                   padding: "0 32px",
                   textAlign: "center",
                   fontSize: 15,
                   lineHeight: 1.6,
+                  cursor: "pointer",
                 }}
               >
                 {video.description || "Arquivo de vídeo não disponível nesta sessão."}
@@ -305,15 +317,22 @@ function VideoPlayerView({
           </div>
   
           <div
+            onClick={handleView}
             style={{
               background: "#e9edf5",
               padding: 16,
               borderRadius: 14,
               textAlign: "left",
               color: "#222",
+              cursor: "pointer",
             }}
           >
-            <strong>Descrição</strong>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 4 }}>
+              <strong>Descrição</strong>
+              <span style={{ fontSize: 13, color: "#666" }}>
+                👁‍🗨️ {video.viewsCount || 0} visualizações
+              </span>
+            </div>
   
             <p style={{ marginTop: 8 }}>
               {video.description || "Sem descrição."}
